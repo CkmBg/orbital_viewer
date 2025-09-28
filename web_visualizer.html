@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Asteroid Orbit Visualizer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+        
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 300px;
+        }
+        
+        #info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 400px;
+        }
+        
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+        
+        select, input {
+            margin: 5px;
+            padding: 8px;
+            border-radius: 3px;
+            border: 1px solid #ccc;
+        }
+        
+        .orbital-params {
+            font-size: 12px;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="controls">
+            <h3>Orbit Controls</h3>
+            <button onclick="toggleAnimation()">Play/Pause Animation</button>
+            <button onclick="resetView()">Reset View</button>
+            <br>
+            <label>Asteroid:</label>
+            <select id="asteroidSelect" onchange="selectAsteroid()">
+                <option value="all">All Asteroids</option>
+                <option value="asteroid_1">Asteroid 1</option>
+                <option value="asteroid_2">Asteroid 2</option>
+                <option value="asteroid_3">Asteroid 3</option>
+            </select>
+            <br>
+            <label>Animation Speed:</label>
+            <input type="range" id="speedSlider" min="0.1" max="5" step="0.1" value="1" 
+                   onchange="updateAnimationSpeed()">
+        </div>
+        
+        <div id="info">
+            <h3>Asteroid Information</h3>
+            <div id="asteroidInfo">
+                <p>Select an asteroid to view its orbital parameters</p>
+            </div>
+            <div class="orbital-params">
+                <p><strong>Controls:</strong></p>
+                <p>• Mouse: Rotate view</p>
+                <p>• Scroll: Zoom in/out</p>
+                <p>• Right-click + drag: Pan</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/controls/OrbitControls.js"></script>
+
+    <script>
+        // Global variables
+        let scene, camera, renderer, controls;
+        let asteroidOrbits = {};
+        let asteroidObjects = {};
+        let animationId;
+        let isAnimating = false;
+        let animationSpeed = 1;
+        let time = 0;
+
+        // Initialize the 3D scene
+        function init() {
+            // Create scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x000011);
+
+            // Create camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(5, 3, 5);
+
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.getElementById('container').appendChild(renderer.domElement);
+
+            // Add orbit controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+
+            // Add lights
+            addLights();
+
+            // Create Sun
+            createSun();
+
+            // Load asteroid data and create orbits
+            loadAsteroidData();
+
+            // Start render loop
+            animate();
+
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize, false);
+        }
+
+        function addLights() {
+            // Ambient light
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.3);
+            scene.add(ambientLight);
+
+            // Sun light (point light)
+            const sunLight = new THREE.PointLight(0xffffff, 1, 100);
+            sunLight.position.set(0, 0, 0);
+            sunLight.castShadow = true;
+            scene.add(sunLight);
+
+            // Directional light for better visibility
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+            directionalLight.position.set(1, 1, 1);
+            scene.add(directionalLight);
+        }
+
+        function createSun() {
+            const sunGeometry = new THREE.SphereGeometry(0.1, 32, 32);
+            const sunMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xffff00,
+                emissive: 0xffaa00
+            });
+            const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+            scene.add(sun);
+
+            // Add sun glow effect
+            const glowGeometry = new THREE.SphereGeometry(0.15, 32, 32);
+            const glowMaterial = new THREE.MeshBasicMaterial({
+                color: 0xffff00,
+                transparent: true,
+                opacity: 0.3
+            });
+            const sunGlow = new THREE.Mesh(glowGeometry, glowMaterial);
+            scene.add(sunGlow);
+        }
+
+        function loadAsteroidData() {
+            // Load data from the Python-generated JSON file
+            fetch('asteroids_web_data.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(asteroidData => {
+                    console.log('Loaded asteroid data:', asteroidData);
+                    
+                    // Create orbit visualizations
+                    const colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff];
+                    let colorIndex = 0;
+
+                    for (const [asteroidName, data] of Object.entries(asteroidData.asteroids)) {
+                        createAsteroidOrbit(asteroidName, data.orbital_elements, colors[colorIndex % colors.length]);
+                        colorIndex++;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading asteroid data:', error);
+                    console.log('Using fallback hardcoded data...');
+                    
+                    // Fall back to hardcoded data if JSON file not found
+                    useHardcodedData();
+                });
+        }
+
+        function useHardcodedData() {
+            // Fallback hardcoded asteroid data
+            const asteroidData = {
+                "asteroids": {
+                    "asteroid_1": {
+                        "orbital_elements": {
+                            "semi_major_axis": 2.2,
+                            "eccentricity": 0.15,
+                            "inclination": 0.087,
+                            "longitude_ascending_node": 0.524,
+                            "right_ascension_ascending_node": 0.785
+                        }
+                    },
+                    "asteroid_2": {
+                        "orbital_elements": {
+                            "semi_major_axis": 2.8,
+                            "eccentricity": 0.25,
+                            "inclination": 0.209,
+                            "longitude_ascending_node": 2.094,
+                            "right_ascension_ascending_node": 1.309
+                        }
+                    },
+                    "asteroid_3": {
+                        "orbital_elements": {
+                            "semi_major_axis": 1.8,
+                            "eccentricity": 0.35,
+                            "inclination": 0.140,
+                            "longitude_ascending_node": 3.491,
+                            "right_ascension_ascending_node": 2.618
+                        }
+                    }
+                }
+            };
+
+            // Create orbit visualizations
+            const colors = [0xff0000, 0x00ff00, 0x0000ff];
+            let colorIndex = 0;
+
+            for (const [asteroidName, data] of Object.entries(asteroidData.asteroids)) {
+                createAsteroidOrbit(asteroidName, data.orbital_elements, colors[colorIndex]);
+                colorIndex++;
+            }
+        }
+
+        function createAsteroidOrbit(name, elements, color) {
+            // Generate orbit points using the same logic as Python
+            const points = generateOrbitPoints(elements);
+            
+            // Create orbit line
+            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+            const material = new THREE.LineBasicMaterial({ color: color });
+            const orbit = new THREE.Line(geometry, material);
+            scene.add(orbit);
+            asteroidOrbits[name] = orbit;
+
+            // Create asteroid object
+            const asteroidGeometry = new THREE.SphereGeometry(0.02, 16, 16);
+            const asteroidMaterial = new THREE.MeshLambertMaterial({ color: color });
+            const asteroid = new THREE.Mesh(asteroidGeometry, asteroidMaterial);
+            scene.add(asteroid);
+            asteroidObjects[name] = {
+                mesh: asteroid,
+                elements: elements,
+                color: color
+            };
+        }
+
+        function generateOrbitPoints(elements) {
+            const points = [];
+            const numPoints = 200;
+            const a = elements.semi_major_axis;
+            const e = elements.eccentricity;
+            const inc = elements.inclination;
+            const omega = elements.longitude_ascending_node;
+            const raan = elements.right_ascension_ascending_node;
+
+            for (let i = 0; i < numPoints; i++) {
+                const u = (i / numPoints) * 2 * Math.PI - Math.PI;
+                
+                // Generate 2D ellipse
+                const x_2d = a * Math.cos(u) - e * a;
+                const y_2d = a * Math.sqrt(1 - e * e) * Math.sin(u);
+                const z_2d = 0;
+
+                // Apply Keplerian rotations
+                const rotated = applyKeplerianRotations(x_2d, y_2d, z_2d, inc, omega, raan);
+                points.push(new THREE.Vector3(rotated.x, rotated.y, rotated.z));
+            }
+
+            return points;
+        }
+
+        function applyKeplerianRotations(x, y, z, inclination, omega, raan) {
+            // Rotation matrices (same as Python implementation)
+            let point = new THREE.Vector3(x, y, z);
+
+            // Inclination (Y-axis rotation)
+            point.applyAxisAngle(new THREE.Vector3(0, 1, 0), inclination);
+
+            // Longitude of ascending node (Z-axis rotation)
+            point.applyAxisAngle(new THREE.Vector3(0, 0, 1), omega);
+
+            // Right ascension of ascending node (X-axis rotation)
+            point.applyAxisAngle(new THREE.Vector3(1, 0, 0), raan);
+
+            return point;
+        }
+
+        function updateAsteroidPositions() {
+            // Update asteroid positions along their orbits
+            for (const [name, asteroidData] of Object.entries(asteroidObjects)) {
+                const elements = asteroidData.elements;
+                const position = calculateOrbitalPosition(time, elements);
+                asteroidData.mesh.position.copy(position);
+            }
+        }
+
+        function calculateOrbitalPosition(t, elements) {
+            // Simplified orbital position calculation
+            const a = elements.semi_major_axis;
+            const e = elements.eccentricity;
+            const T = 2 * Math.PI * Math.sqrt(Math.pow(a, 3)); // Simplified period
+            const n = 2 * Math.PI / T; // Mean motion
+            const M = n * t; // Mean anomaly
+
+            // Simplified eccentric anomaly (should use iterative solver in practice)
+            const E = M + e * Math.sin(M);
+
+            // Position in orbital plane
+            const r = a * (1 - e * Math.cos(E));
+            const x_orb = r * ((Math.cos(E) - e) / (1 - e * Math.cos(E)));
+            const y_orb = r * ((Math.sqrt(1 - e * e) * Math.sin(E)) / (1 - e * Math.cos(E)));
+
+            // Apply rotations
+            return applyKeplerianRotations(
+                x_orb, y_orb, 0,
+                elements.inclination,
+                elements.longitude_ascending_node,
+                elements.right_ascension_ascending_node
+            );
+        }
+
+        function animate() {
+            animationId = requestAnimationFrame(animate);
+
+            controls.update();
+
+            if (isAnimating) {
+                time += 0.01 * animationSpeed;
+                updateAsteroidPositions();
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        function toggleAnimation() {
+            isAnimating = !isAnimating;
+        }
+
+        function resetView() {
+            camera.position.set(5, 3, 5);
+            controls.reset();
+            time = 0;
+        }
+
+        function selectAsteroid() {
+            const selected = document.getElementById('asteroidSelect').value;
+            
+            // Update info panel
+            if (selected === 'all') {
+                document.getElementById('asteroidInfo').innerHTML = 
+                    '<p>Showing all asteroids in the main belt</p>';
+            } else if (asteroidObjects[selected]) {
+                const elements = asteroidObjects[selected].elements;
+                document.getElementById('asteroidInfo').innerHTML = `
+                    <p><strong>${selected}</strong></p>
+                    <p>Semi-major axis: ${elements.semi_major_axis.toFixed(2)} AU</p>
+                    <p>Eccentricity: ${elements.eccentricity.toFixed(3)}</p>
+                    <p>Inclination: ${(elements.inclination * 180 / Math.PI).toFixed(1)}°</p>
+                `;
+            }
+        }
+
+        function updateAnimationSpeed() {
+            animationSpeed = parseFloat(document.getElementById('speedSlider').value);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Initialize when page loads
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
