@@ -1,0 +1,73 @@
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: var(--color-text); /* Use text color from colors.css */
+  background-color: var(--color-background); /* Use background color from colors.css */
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 500;
+  color: var(--color-link-primary); /* Use link primary color from colors.css */
+  text-decoration: inherit;
+}
+a:hover {
+  color: var(--color-link-secondary); /* Use link secondary color from colors.css */
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+  background-color: var(--color-background); /* Use background color from colors.css */
+  color: var(--color-text); /* Use text color from colors.css */
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+  color: var(--color-primary); /* Use primary color for headings */
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid var(--color-border); /* Use border color from colors.css */
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: var(--color-button-primary); /* Use button primary color */
+  color: var(--color-text); /* Use text color for button text */
+  cursor: pointer;
+  transition: border-color 0.25s, background-color 0.25s;
+}
+button:hover {
+  border-color: var(--color-primary); /* Use primary color for hover border */
+  background-color: var(--color-button-secondary); /* Use button secondary color for hover */
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto var(--color-shadow); /* Use shadow color for focus outline */
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: var(--color-text);
+    background-color: var(--color-background);
+  }
+  a:hover {
+    color: var(--color-link-secondary);
+  }
+  button {
+    background-color: var(--color-button-primary);
+  }
+}

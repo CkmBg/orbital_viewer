@@ -1,0 +1,31 @@
+:root {
+    /* Dark Theme */
+    --color-background: #181a20;
+    --color-text: #e6e6e6;
+    --color-primary: #424570;
+    --color-secondary: #535bf2;
+    --color-border: #444c56;
+    --color-shadow: rgba(0, 0, 0, 0.2);
+
+    --color-link-primary: #8ab4f8;
+    --color-link-secondary: #a1b8e6;
+    --color-button-primary: #535bf2;
+    --color-button-secondary: #424570;
+}
+
+@media (prefers-color-scheme: light) {
+    :root {
+        /* Light Theme */
+        --color-background: #ffffff; 
+        --color-text: #213547;
+        --color-primary: #646cff;
+        --color-secondary: #747bff;
+        --color-border: #dddddd;
+        --color-shadow: rgba(0, 0, 0, 0.1);
+
+        --color-link-primary: #1a0dab;
+        --color-link-secondary: #5f6368;
+        --color-button-primary: #646cff;
+        --color-button-secondary: #747bff;
+    }
+}
