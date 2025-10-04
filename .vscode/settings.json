@@ -9,5 +9,11 @@
         "GitHub.copilot-chat": [
             "workspace"
         ]
-    }
+    },
+    "python.testing.pytestArgs": [
+        "backend"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "python-envs.pythonProjects": []
 }
