@@ -9,6 +9,10 @@ RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
 RUN mkdir -p /home/root/.ssh && \
     chown root:root /home/root/.ssh && \
     chmod 700 /home/root/.ssh
+# Ensure .ssh directory exists for root user
+RUN mkdir -p /home/root/.ssh && \
+    chown root:root /home/root/.ssh && \
+    chmod 700 /home/root/.ssh
 
 # Set working directory
 WORKDIR /workspace
