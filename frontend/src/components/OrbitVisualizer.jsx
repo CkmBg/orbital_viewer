@@ -43,12 +43,26 @@ function autoFrame(camera, controls, objects, padding = 1.2) {
 
 export default function OrbitVisualizer({ trajectories }) {
   const mountRef = useRef(null);
-  // Refs to keep planet meshes and their sample points accessible outside the main effect
-  const planetsRef = useRef([]);
-  const planetsPointsRef = useRef([]);
-  const transitionRef = useRef({ rafId: null, start: 0, duration: 600 });
-  // impact data currently unused in visualization; keep import for future use
-  const planetsPoints = PLANETS_POINTS?.bodies;
+  // Asteroid mesh
+    const asteroid = new THREE.Mesh(
+      new THREE.SphereGeometry(0.05, 16, 16),
+      new THREE.MeshPhongMaterial({ color: 0xd3d3d3 })
+    );
+
+    // Sun mesh
+    const sun = new THREE.Mesh(
+      new THREE.SphereGeometry(0.1, 32, 32),
+      new THREE.MeshBasicMaterial({ color: 0xffff00 })
+    );
+
+    // Light
+    const light = new THREE.PointLight(0xffffff, 10, 100);
+    light.position.set(2, 2, 2);
+    
+    const scene = new THREE.Scene();
+
+  const camera = new THREE.PerspectiveCamera(75, 1 / 1, 0.1, 1000);
+
   useEffect(() => {
     if (!trajectories || Object.keys(trajectories).length === 0) return;
 
@@ -118,3 +132,4 @@ export default function OrbitVisualizer({ trajectories }) {
 
   return <div ref={mountRef} style={{ width: '100%', height: '100%' }} />;
 }
+
