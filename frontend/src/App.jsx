@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import OrbitVisualizer from "./components/OrbitVisualizer";
 import ErrorBoundary from "./components/ErrorBoundary";
 import VerticalMenu from "./components/VerticalMenu";

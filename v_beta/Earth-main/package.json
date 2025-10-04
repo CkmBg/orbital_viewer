@@ -1,0 +1,18 @@
+{
+  "name": "earth-main",
+  "version": "1.0.0",
+  "description": "1. Clone this repository on your system",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@react-three/fiber": "^9.3.0",
+    "express": "^5.1.0",
+    "three": "^0.180.0"
+  }
+}
