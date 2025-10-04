@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import OrbitVisualizer from "./components/OrbitVisualizer";
 import ErrorBoundary from './components/ErrorBoundary';
@@ -8,6 +9,7 @@ import './css/App.css';
 
 function App() {
   const [trajectory, setTrajectory] = useState(null);
+  const [transition, setTransition] = useState(true);
 
   const loadOrbit = async () => {
     const data = await fetchOrbit({
@@ -25,17 +27,13 @@ function App() {
   return (
     <div id="root">
       {/* Left vertical menu */}
-      <VerticalMenu>
-        <button onClick={loadOrbit} style={{ marginTop: "20px" }}>
-          Load Orbit
-        </button>
-      </VerticalMenu>
+      <VerticalMenu loadOrbit={loadOrbit} handleTransition={setTransition} transition={transition} /> 
 
       {/* Main content area */}
       <div className="main-content">
         {trajectory ? (
           <ErrorBoundary>
-            <OrbitVisualizer trajectory={trajectory} />
+            <OrbitVisualizer trajectory={trajectory} transition={transition} />
           </ErrorBoundary>
         ) : (
           <div className="placeholder-message">

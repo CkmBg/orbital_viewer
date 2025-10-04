@@ -21,23 +21,21 @@ const titleStyle = {
     letterSpacing: '1px',
 };
 
-// const optionStyle = {
-//     margin: '10px 0',
-//     padding: '10px 15px',
-//     width: '100%',
-//     background: '#3a4a5a',
-//     border: 'none',
-//     borderRadius: '4px',
-//     color: '#fff',
-//     cursor: 'pointer',
-//     textAlign: 'left',
-// }
-
-function VerticalMenu({ children }) {
+function VerticalMenu({loadOrbit, handleTransition, transition}) {
     return (
         <nav style={menuStyle}>
             <div style={titleStyle}>Orbital Visualizer</div>
-            {/* {children} */}
+            <button onClick={loadOrbit} style={{ marginTop: "20px" }}>
+                Load Orbit
+            </button>
+            <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 'auto', marginBottom: '60px', paddingBottom: '20px', fontSize: '0.9rem', color: '#888',}}>
+                <div> BOTTOM NAV </div>
+                <div style={{width: '200px', border:'1px solid', display: 'flex', justifyContent: 'space-between', marginTop: '10px'}}>
+                    <button onClick={() =>handleTransition(true)}>Dev</button>
+                    <div>{transition ? "Zoom in" : "Zoom out"}</div>
+                    <button onClick={() =>handleTransition(false)}>Prod</button>
+                </div>
+            </div>
         </nav>
     );
 }
