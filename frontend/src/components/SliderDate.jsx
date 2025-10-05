@@ -1,15 +1,12 @@
-import { useState, useRef } from "react";
-import { PLANETS_POINTS, SHARED_TIMELINE } from "../utils/constant";
+import { useState } from "react";
+import { PLANETS_POINTS } from "../utils/constant";
 
 export default function DateSlider({ handleIndexTransition }) {
-  // Shared timeline
-  const timeline = SHARED_TIMELINE || [];
-  const startDate = timeline[0] ? new Date(timeline[0]).getTime() : Date.now();
-  const endDate = timeline[timeline.length - 1]
-    ? new Date(timeline[timeline.length - 1]).getTime()
-    : Date.now();
+  // Dates de début et de fin
+  const startDate = new Date("2025-11-03").getTime();
+  const endDate = new Date("2055-11-03").getTime();
 
-  // Valeur initiale (use first timeline index as ms value)
+  // Valeur initiale
   const [dateValue, setDateValue] = useState(startDate);
 
   // Fonction pour formater la date en dd/mm/yyyy
@@ -25,41 +22,6 @@ export default function DateSlider({ handleIndexTransition }) {
   const handleChange = (e) => {
     setDateValue(parseInt(e.target.value));
   };
-  // raf ref to throttle updates while dragging
-  const rafRef = useRef(null);
-
-  // Find nearest index in the shared timeline
-  const findNearestIndex = (ms) => {
-    if (!timeline || timeline.length === 0) return 0;
-    let best = 0;
-    let bestDiff = Infinity;
-    for (let i = 0; i < timeline.length; i++) {
-      const tMs = new Date(timeline[i]).getTime();
-      const diff = Math.abs(tMs - ms);
-      if (diff < bestDiff) {
-        bestDiff = diff;
-        best = i;
-      }
-    }
-    return best;
-  };
-
-  const updateIndexFromDate = () => {
-    const idx = findNearestIndex(dateValue);
-    handleIndexTransition(idx);
-    // console logs for debugging
-    // console.log("Date sélectionnée :", new Date(dateValue).toISOString());
-    // console.log("Index - ", idx);
-  };
-
-  // Throttled update while dragging: call updateIndexFromDate via RAF
-  const scheduleUpdate = () => {
-    if (rafRef.current) return;
-    rafRef.current = requestAnimationFrame(() => {
-      updateIndexFromDate();
-      rafRef.current = null;
-    });
-  };
 
   return (
     <div style={{ padding: "20px", color: "#fff" }}>
@@ -71,25 +33,39 @@ export default function DateSlider({ handleIndexTransition }) {
           max={endDate}
           step={24 * 60 * 60 * 1000} // 1 jour en millisecondes
           value={dateValue}
-          onChange={(e) => {
-            handleChange(e);
-            scheduleUpdate();
-          }}
+          onChange={handleChange}
           style={{ width: "100%", marginTop: "10px" }}
           //   onDragEnd={() => console.log("Date sélectionnée :", new Date(dateValue).toISOString())}
           onTouchEnd={() => {
-            updateIndexFromDate();
-            if (rafRef.current) {
-              cancelAnimationFrame(rafRef.current);
-              rafRef.current = null;
-            }
-          }}
-          onMouseUp={() => {
-            updateIndexFromDate();
-            if (rafRef.current) {
-              cancelAnimationFrame(rafRef.current);
-              rafRef.current = null;
-            }
+            handleIndexTransition(
+              PLANETS_POINTS?.bodies[0]?.samples?.findIndex((elm) => {
+                const d1 = new Date(elm.datetime_utc);
+                const d2 = new Date(dateValue);
+
+                return (
+                  d1.getFullYear() === d2.getFullYear() &&
+                  d1.getMonth() === d2.getMonth() &&
+                  d1.getDate() === d2.getDate()
+                );
+              })
+            );
+            console.log(
+              "Date sélectionnée :",
+              new Date(dateValue).toISOString()
+            );
+            console.log(
+              "Index - ",
+              PLANETS_POINTS?.bodies[0]?.samples?.findIndex((elm) => {
+                const d1 = new Date(elm.datetime_utc);
+                const d2 = new Date(dateValue);
+
+                return (
+                  d1.getFullYear() === d2.getFullYear() &&
+                  d1.getMonth() === d2.getMonth() &&
+                  d1.getDate() === d2.getDate()
+                );
+              })
+            );
           }}
         />
       </label>
