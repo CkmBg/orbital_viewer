@@ -43,9 +43,11 @@ function autoFrame(camera, controls, objects, padding = 1.2) {
 
 export default function OrbitVisualizer({ trajectories }) {
   const mountRef = useRef(null);
-  const impactTimelinePoints = IMPACT.map((imp) =>
-    imp?.timeline?.slice(0, 732)?.map((el) => el.heliocentric?.r_au)
-  );
+  // Refs to keep planet meshes and their sample points accessible outside the main effect
+  const planetsRef = useRef([]);
+  const planetsPointsRef = useRef([]);
+  const transitionRef = useRef({ rafId: null, start: 0, duration: 600 });
+  // impact data currently unused in visualization; keep import for future use
   const planetsPoints = PLANETS_POINTS?.bodies;
   useEffect(() => {
     if (!trajectories || Object.keys(trajectories).length === 0) return;
