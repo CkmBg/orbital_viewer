@@ -1,6 +1,7 @@
-import * as THREE from '/build/three.module.js';
-import { OrbitControls } from '/jsm/controls/OrbitControls.js';
-import Stats from '/jsm/libs/stats.module.js';
+// import * as THREE from '/build/three.module.js';
+import * as THREE from 'three';
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import Stats from 'three/examples/jsm/libs/stats.module.js';
 
 // ---- Variables globales ----
 let scene, camera, renderer;
