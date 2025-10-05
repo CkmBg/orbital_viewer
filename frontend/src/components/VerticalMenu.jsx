@@ -23,13 +23,14 @@ const titleStyle = {
     letterSpacing: '1px',
 };
 
-function VerticalMenu({loadOrbit, handleTransition, transition}) {
+function VerticalMenu({loadOrbit, handleTransition, transition, handleIndexTransition}) {
     return (
         <nav style={menuStyle}>
             <div style={titleStyle}>Orbital Visualizer</div>
             <button onClick={loadOrbit} style={{ marginTop: "20px" }}>
                 Load Orbit
             </button>
+            <DateSlider handleIndexTransition={handleIndexTransition}/>
             <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 'auto', marginBottom: '60px', paddingBottom: '20px', fontSize: '0.9rem', color: '#888',}}>
                 <div> BOTTOM NAV </div>
                 <div style={{width: '200px', border:'1px solid', display: 'flex', justifyContent: 'space-between', marginTop: '10px'}}>
