@@ -1,25 +1,14 @@
-import { useRef, useEffect } from "react";
-import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import {
-  createRenderer,
-  createCamera,
-  createLight,
-  applyNebulaBackground,
-  resizeRenderer,
-} from "../utils/threeSceneUtils";
-import {
-  buildPlanetOrbitWithTexture,
-  createSun,
-  updatePlanetObject,
-  disposePlanetObject,
-} from "../utils/threeStarUtils";
-import { STAR_DEFAULT_COLORS } from "../utils/constants";
+import { useRef, useEffect } from 'react';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { createRenderer, createCamera, createLight, applyNebulaBackground, resizeRenderer } from '../utils/threeSceneUtils';
+import { buildPlanetOrbitWithTexture, createSun, updatePlanetObject, disposePlanetObject } from '../utils/threeStarUtils';
+import { STAR_DEFAULT_COLORS } from '../utils/constants';
 
 function autoFrame(camera, controls, objects, padding = 1.2) {
   if (!objects.length) return;
   const box = new THREE.Box3();
-  objects.forEach((o) => {
+  objects.forEach(o => {
     if (o.pts && o.pts.length) {
       for (let i = 0; i < o.pts.length; i++) box.expandByPoint(o.pts[i]);
     }
@@ -60,6 +49,10 @@ export default function OrbitVisualizer({ trajectories }) {
 
     const container = mountRef.current;
     if (!container) return;
+    if (!trajectories || Object.keys(trajectories).length === 0) return;
+
+    const container = mountRef.current;
+    if (!container) return;
 
     const scene = new THREE.Scene();
     applyNebulaBackground(scene);
@@ -73,42 +66,44 @@ export default function OrbitVisualizer({ trajectories }) {
     let frame = 0;
     let cancelled = false;
 
+    applyNebulaBackground(scene);
+    const camera = createCamera(container);
+    const renderer = createRenderer(container);
+    container.appendChild(renderer.domElement);
+    createLight(scene);
+    createSun(scene);
+
+    const planetObjects = [];
+    let frame = 0;
+    let cancelled = false;
+
     const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
 
-    console.log(
-      "[OrbitVisualizer] Building planet meshes (static textures sync)"
-    );
+    console.log('[OrbitVisualizer] Building planet meshes (static textures sync)');
     const names = Object.keys(trajectories);
-    names.forEach((name) => {
+    names.forEach(name => {
       const traj = trajectories[name];
       if (!Array.isArray(traj) || traj.length === 0) return;
       const fallbackColor = STAR_DEFAULT_COLORS[name] ?? 0xffffff;
       try {
-        const planetObj = buildPlanetOrbitWithTexture(
-          scene,
-          name,
-          traj,
-          fallbackColor
-        );
+        const planetObj = buildPlanetOrbitWithTexture(scene, name, traj, fallbackColor);
         planetObjects.push(planetObj);
       } catch (e) {
         console.warn(`[OrbitVisualizer] Failed building ${name}:`, e);
       }
     });
 
-    console.log(
-      "[OrbitVisualizer] Planets ready:",
-      planetObjects.map((p) => p.name)
-    );
+    console.log('[OrbitVisualizer] Planets ready:', planetObjects.map(p => p.name));
     const framed = autoFrame(camera, controls, planetObjects, 1.25);
-    if (framed) console.log("[OrbitVisualizer] Autoframe result:", framed);
+    if (framed) console.log('[OrbitVisualizer] Autoframe result:', framed);
 
     const animate = () => {
       if (cancelled) return;
       frame++;
-      planetObjects.forEach((o) => updatePlanetObject(o, frame));
+      planetObjects.forEach(o => updatePlanetObject(o, frame));
       controls.update();
       renderer.render(scene, camera);
       requestAnimationFrame(animate);
@@ -118,22 +113,23 @@ export default function OrbitVisualizer({ trajectories }) {
     const handleResize = () => {
       resizeRenderer(renderer, camera, container);
       autoFrame(camera, null, planetObjects, 1.25); // re-fit on resize (keep current orbit positions)
+      resizeRenderer(renderer, camera, container);
+      autoFrame(camera, null, planetObjects, 1.25); // re-fit on resize (keep current orbit positions)
     };
-    window.addEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
 
     return () => {
       cancelled = true;
-      window.removeEventListener("resize", handleResize);
+      window.removeEventListener('resize', handleResize);
       planetObjects.forEach(disposePlanetObject);
       renderer.dispose();
-      try {
-        container.removeChild(renderer.domElement);
-      } catch {}
+      try { container.removeChild(renderer.domElement); } catch { }
       scene.clear();
-      console.log("[OrbitVisualizer] Cleanup complete");
+      console.log('[OrbitVisualizer] Cleanup complete');
     };
   }, [trajectories]);
+  }, [trajectories]);
 
-  return <div ref={mountRef} style={{ width: "100%", height: "100%" }} />;
+  return <div ref={mountRef} style={{ width: '100%', height: '100%' }} />;
 }
 
